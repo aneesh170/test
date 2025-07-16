@@ -1,3 +1,5 @@
+
+
 import React, { useState, useCallback, useRef } from 'react';
 import heic2any from 'heic2any';
 import { CameraIcon, CheckCircleIcon, LoaderIcon, ExclamationTriangleIcon, SparklesIcon, TagIcon, EditIcon, XMarkIcon, UploadIcon, ChevronDownIcon } from './components/icons';
@@ -86,7 +88,6 @@ const App: React.FC = () => {
               onCameraClick={() => setView('scanStain')}
               onImageSelected={handleStainCapture}
               onClearClick={() => setStainImage(null)}
-              onError={(msg) => setError(msg)}
               color="indigo"
               isLoading={isLoading}
             />
@@ -100,7 +101,6 @@ const App: React.FC = () => {
               onCameraClick={() => setView('scanTag')}
               onImageSelected={handleTagCapture}
               onClearClick={() => setTagImage(null)}
-              onError={(msg) => setError(msg)}
               color="teal"
               optional
             />
@@ -220,25 +220,27 @@ interface ScanStepProps {
   onCameraClick: () => void;
   onImageSelected: (base64: string) => void;
   onClearClick: () => void;
-  onError?: (message: string) => void;
   color: 'indigo' | 'teal';
   optional?: boolean;
   isLoading?: boolean;
 }
 
-const ScanStep: React.FC<ScanStepProps> = ({ 
-  step, 
-  title, 
-  icon, 
-  image, 
-  onCameraClick, 
-  onImageSelected, 
-  onClearClick, 
-  onError,
-  color, 
-  optional, 
-  isLoading 
+const ScanStep: React.FC<ScanStepProps> = ({
+  step,
+  title,
+  icon,
+  image,
+  onCameraClick,
+  onImageSelected,
+  onClearClick,
+  color,
+  optional,
+  isLoading,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
   const colors = {
     indigo: {
       bg: 'bg-indigo-50',
@@ -257,105 +259,91 @@ const ScanStep: React.FC<ScanStepProps> = ({
       stepBg: 'bg-teal-100',
       stepText: 'text-teal-600',
       border: 'border-teal-500',
-    }
+    },
   };
+
   const theme = colors[color];
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileSelect = async (file: File | null) => {
     if (!file || isUploading) return;
-
     setIsUploading(true);
+
     try {
-      let processingFile: File | Blob = file;
-      const fileNameLower = file.name.toLowerCase();
-      
-      // Check for HEIC/HEIF by both MIME type and extension
-      const isHeic = file.type.includes('heic') || 
-                    file.type.includes('heif') || 
-                    fileNameLower.endsWith('.heic') || 
-                    fileNameLower.endsWith('.heif');
+      const fileName = file.name.toLowerCase();
+      const isHeic =
+        file.type.includes('heic') ||
+        file.type.includes('heif') ||
+        fileName.endsWith('.heic') ||
+        fileName.endsWith('.heif');
+
+      let finalBlob: Blob = file;
 
       if (isHeic) {
-        try {
-          // Convert HEIC to JPEG
-          const conversionResult = await heic2any({
-            blob: file,
-            toType: "image/jpeg",
-            quality: 0.8,
-          });
+        const conversionResult = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.9,
+        });
 
-          // Handle both single and array responses from heic2any
-          processingFile = Array.isArray(conversionResult) ? 
-            conversionResult[0] : 
-            conversionResult;
+        finalBlob = Array.isArray(conversionResult)
+          ? conversionResult[0]
+          : conversionResult;
 
-          if (!(processingFile instanceof Blob)) {
-            throw new Error("HEIC conversion failed to produce a valid image");
-          }
-        } catch (error) {
-          console.error("HEIC conversion error:", error);
-          if (onError) onError("Failed to process iPhone image. Please try again or use a different image.");
-          return;
+        if (!(finalBlob instanceof Blob)) {
+          throw new Error('HEIC conversion failed. Try using a JPEG or PNG.');
         }
       }
 
-      // Validate the processed file is an image
-      if (!processingFile.type.startsWith('image/')) {
-        throw new Error("The file is not a valid image");
-      }
-
-      // Convert to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => {
-          console.error("File reading error:", error);
-          reject(new Error("Failed to read the image file"));
-        };
-        reader.readAsDataURL(processingFile);
+        reader.onerror = () => reject('Failed to read file');
+        reader.readAsDataURL(finalBlob);
       });
 
       onImageSelected(base64);
     } catch (error) {
-      console.error("File processing error:", error);
-      if (onError) onError("Failed to process the image. Please try a different image format (JPEG or PNG).");
+      console.error('Image processing error:', error);
+      alert(
+        'Failed to process image. Please upload a JPEG, PNG, or HEIC file under 10MB.'
+      );
     } finally {
       setIsUploading(false);
     }
   };
-  
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
 
   const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files?.[0]) {
       handleFileSelect(e.target.files[0]);
     }
   };
-  
-  const handleDragEvents = (e: React.DragEvent<HTMLDivElement>, entering: boolean) => {
+
+  const handleDragEvents = (
+    e: React.DragEvent<HTMLDivElement>,
+    entering: boolean
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isLoading && !isUploading) {
       setIsDragging(entering);
     }
   };
-    
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    if (!isLoading && !isUploading && e.dataTransfer.files && e.dataTransfer.files[0]) {
+    if (!isLoading && !isUploading && e.dataTransfer.files?.[0]) {
       handleFileSelect(e.dataTransfer.files[0]);
     }
   };
 
   return (
-    <div className={`bg-white p-5 rounded-xl shadow-sm border border-gray-200 transition-all`}>
+    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 transition-all">
       <input
         ref={fileInputRef}
         type="file"
@@ -364,19 +352,23 @@ const ScanStep: React.FC<ScanStepProps> = ({
         onChange={onFileInputChange}
         disabled={isLoading || isUploading}
       />
+
       <div className="flex flex-wrap items-center gap-4">
-        <div className={`flex items-center gap-3`}>
-          <div className={`${theme.stepBg} ${theme.stepText} rounded-full h-8 w-8 flex-shrink-0 flex items-center justify-center font-bold text-sm`}>{step}</div>
+        <div className="flex items-center gap-3">
+          <div
+            className={`${theme.stepBg} ${theme.stepText} rounded-full h-8 w-8 flex-shrink-0 flex items-center justify-center font-bold text-sm`}
+          >
+            {step}
+          </div>
           <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
           {optional && <span className="text-sm text-gray-500">(Optional)</span>}
           {icon}
         </div>
-        
         <div className="flex-grow flex items-center justify-end gap-4 ml-auto">
           {image && (
             <div className="flex items-center gap-2 text-green-600 font-semibold text-sm">
-                <CheckCircleIcon className="w-6 h-6" />
-                <span>Captured</span>
+              <CheckCircleIcon className="w-6 h-6" />
+              <span>Captured</span>
             </div>
           )}
         </div>
@@ -385,77 +377,76 @@ const ScanStep: React.FC<ScanStepProps> = ({
       {image ? (
         <div className="mt-4 flex flex-col sm:flex-row items-center gap-4">
           <div className="relative w-full sm:w-32 h-24 rounded-lg overflow-hidden flex-shrink-0 border">
-            <img src={image} alt={`${title} preview`} className="w-full h-full object-cover" />
-            {isLoading && (
-              <div className="absolute inset-0 bg-black/20 overflow-hidden pointer-events-none">
-                <div className="laser-scanner"></div>
-              </div>
-            )}
+            <img
+              src={image}
+              alt={`${title} preview`}
+              className="w-full h-full object-cover"
+            />
             {!isLoading && (
               <button
                 onClick={onClearClick}
-                className="absolute top-1 right-1 bg-black bg-opacity-50 text-gray-300 rounded-full p-1 hover:bg-opacity-75 transition-opacity"
-                aria-label="Clear image"
+                className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-75 transition"
               >
-                <XMarkIcon className="h-4 w-4" />
+                <XMarkIcon className="w-4 h-4" />
               </button>
             )}
           </div>
           <div className="text-center sm:text-left">
-              <p className={`${theme.text} font-semibold`}>
-                {isLoading ? 'Analyzing image...' : 'Image ready for analysis.'}
-              </p>
-              <button 
-                onClick={onClearClick}
-                disabled={isLoading}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-wait"
-              >
-                  Click here to use a different picture.
-              </button>
+            <p className={`${theme.text} font-semibold`}>
+              {isLoading ? 'Analyzing image...' : 'Image ready for analysis.'}
+            </p>
           </div>
         </div>
       ) : (
         <div
-            onDragEnter={(e) => handleDragEvents(e, true)}
-            onDragLeave={(e) => handleDragEvents(e, false)}
-            onDragOver={(e) => handleDragEvents(e, true)}
-            onDrop={handleDrop}
-            className={`mt-4 p-4 border-2 border-dashed rounded-lg text-center transition-colors ${isDragging && !isUploading ? `${theme.bg} border-solid ${theme.border}` : 'border-gray-300'} ${isUploading ? 'cursor-wait bg-gray-50' : ''}`}
+          onDragEnter={(e) => handleDragEvents(e, true)}
+          onDragLeave={(e) => handleDragEvents(e, false)}
+          onDragOver={(e) => handleDragEvents(e, true)}
+          onDrop={handleDrop}
+          className={`mt-4 p-4 border-2 border-dashed rounded-lg text-center transition-colors ${
+            isDragging && !isUploading
+              ? `${theme.bg} border-solid ${theme.border}`
+              : 'border-gray-300'
+          } ${isUploading ? 'cursor-wait bg-gray-50' : ''}`}
         >
-            <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
-                <button
-                    onClick={handleUploadClick}
-                    disabled={isLoading || isUploading}
-                    className={`flex items-center justify-center px-5 py-2 rounded-full font-semibold text-sm text-white transition-colors ${theme.button} disabled:bg-slate-400 disabled:cursor-not-allowed min-w-[160px]`}
-                >
-                    {isUploading ? (
-                        <>
-                            <LoaderIcon className="animate-spin h-5 w-5 mr-2" />
-                            Processing...
-                        </>
-                    ) : (
-                        <>
-                            <UploadIcon className="w-5 h-5 mr-2" />
-                            Upload Photo
-                        </>
-                    )}
-                </button>
-                <span className="text-gray-500 text-sm font-medium">or</span>
-                <button
-                    onClick={onCameraClick}
-                    disabled={isLoading || isUploading}
-                    className="flex items-center justify-center px-5 py-2 rounded-full font-semibold text-sm bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
-                >
-                    <CameraIcon className="w-5 h-5 mr-2" />
-                    Use Camera
-                </button>
-            </div>
-            <p className="text-xs text-gray-500 mt-3">You can also drag and drop an image file here.</p>
+          <div className="flex flex-col items-center justify-center gap-4 md:flex-row">
+            <button
+              onClick={handleUploadClick}
+              disabled={isLoading || isUploading}
+              className={`flex items-center justify-center px-5 py-2 rounded-full font-semibold text-sm text-white transition-colors ${theme.button} disabled:bg-slate-400 disabled:cursor-not-allowed min-w-[160px]`}
+            >
+              {isUploading ? (
+                <>
+                  <LoaderIcon className="animate-spin h-5 w-5 mr-2" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <UploadIcon className="w-5 h-5 mr-2" />
+                  Upload Photo
+                </>
+              )}
+            </button>
+            <span className="text-gray-500 text-sm font-medium">or</span>
+            <button
+              onClick={onCameraClick}
+              disabled={isLoading || isUploading}
+              className="flex items-center justify-center px-5 py-2 rounded-full font-semibold text-sm bg-white border-2 border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+            >
+              <CameraIcon className="w-5 h-5 mr-2" />
+              Use Camera
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-3">
+            You can also drag and drop an image file here.
+          </p>
         </div>
       )}
     </div>
   );
 };
+
+
 
 const faqs = [
   {
