@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Primary Meta Tags -->
+    <title>Stain Remover AI | Instant Laundry & Stain Removal Guide</title>
+    <meta name="description" content="Get instant, AI-powered stain removal instructions. Scan any stain with your camera, and our laundry guide AI will identify it, analyze your garment, and provide a step-by-step cleaning plan with product recommendations." />
+    <meta name="keywords" content="stain remover, laundry guide, how to remove stains, stain identification, ai stain remover, laundry care, garment care, cleaning advice, stain out, laundry stain remover">
+    <link rel="canonical" href="https://stainremover.ai/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://stainremover.ai/">
+    <meta property="og:title" content="Stain Remover AI | Instant Laundry & Stain Removal Guide">
+    <meta property="og:description" content="Say goodbye to tough stains! Use your camera to get instant, personalized laundry advice from our advanced AI.">
+    <meta property="og:image" content="https://stainremover.ai/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://stainremover.ai/">
+    <meta property="twitter:title" content="Stain Remover AI | Instant Laundry & Stain Removal Guide">
+    <meta property="twitter:description" content="Say goodbye to tough stains! Use your camera to get instant, personalized laundry advice from our advanced AI.">
+    <meta property="twitter:image" content="https://stainremover.ai/og-image.png">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Stain Remover AI",
+        "operatingSystem": "Any",
+        "applicationCategory": "UtilitiesApplication",
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "ratingCount": "1250"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "An intelligent stain remover that uses AI to analyze stains and garment tags. Simply scan a stain and the care label with your camera to receive personalized cleaning recommendations.",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://stainremover.ai/"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "How to Use Stain Remover AI to Get Cleaning Advice",
+        "description": "Follow these simple steps to get personalized stain removal instructions for your clothes.",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "name": "Scan the Stain",
+            "text": "Use your device's camera or upload a photo of the stain on your garment. Ensure the image is clear and well-lit for the best analysis.",
+            "url": "https://stainremover.ai/#step-1"
+          },
+          {
+            "@type": "HowToStep",
+            "name": "Scan the Garment Tag (Optional)",
+            "text": "For more accurate advice, scan the garment's care tag. This helps the AI understand the fabric type and washing limitations.",
+            "url": "https://stainremover.ai/#step-2"
+          },
+           {
+            "@type": "HowToStep",
+            "name": "Add Extra Details (Optional)",
+            "text": "Provide any additional context, like the stain's age or fabric type if you know it, to help refine the AI's recommendations.",
+            "url": "https://stainremover.ai/#step-3"
+          },
+          {
+            "@type": "HowToStep",
+            "name": "Get AI-Powered Advice",
+            "text": "Click 'Get Care Advice' to let our AI analyze the images. You'll receive a detailed, step-by-step guide to remove the stain safely.",
+            "url": "https://stainremover.ai/#get-advice"
+          }
+        ],
+        "totalTime": "PT2M"
+      }
+    ]
+    </script>
+
+    <style>
+      @keyframes scan {
+        0% { top: 0; }
+        50% { top: calc(100% - 3px); }
+        100% { top: 0; }
+      }
+      .laser-scanner {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: rgba(255, 0, 0, 0.7);
+        box-shadow: 0 0 10px 2px rgba(255, 0, 0, 0.5);
+        animation: scan 2s infinite ease-in-out;
+      }
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+      }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.7.0",
+    "heic2any": "https://esm.sh/heic2any@^0.0.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

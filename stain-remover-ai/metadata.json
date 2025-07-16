@@ -1,0 +1,20 @@
+{
+  "name": "Stain Remover AI",
+  "description": "Get instant, AI-powered stain removal instructions. Scan any stain with your camera, and our laundry guide AI will identify it, analyze your garment, and provide a step-by-step cleaning plan with product recommendations.",
+  "keywords": [
+    "stain remover",
+    "laundry guide",
+    "how to remove stains",
+    "stain identification",
+    "ai stain remover",
+    "laundry care",
+    "garment care",
+    "cleaning advice",
+    "stain out",
+    "laundry stain remover"
+  ],
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "prompt": ""
+}
